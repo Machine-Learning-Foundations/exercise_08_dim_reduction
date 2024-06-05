@@ -1,0 +1,7 @@
+nox
+numpy
+matplotlib
+scikit-learn
+scikit-image
+tqdm
+imageio
