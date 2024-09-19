@@ -17,7 +17,7 @@ Navigate to `src/ex1_pca.py` and have a look at the `__main__` function :
 
 Now we will implement the functions to perform a PCA transform and an inverse transform on our 2D array. First implement the function `pca_transform`: 
 
-4. Compute the mean vector over the features of the input matrix. The resulting mean vector should have the size $(d,1)$.
+4. Compute the mean vector over the features of the input matrix. The resulting mean vector should have the size $(d,1)$. (Hint: use `keepdims=True`in the function `numpy.mean` to keep the dimensions for easier subtraction.)
 5. Center the data by subtracting the mean from the 2D image array.
 6. Compute the covariance matrix of the centered data. (Hint: `numpy.cov`.)
 7. Perform the eigendecomposition of the covariance matrix. (Hint: `numpy.linalg.eigh`)
@@ -27,8 +27,8 @@ Now we will implement the functions to perform a PCA transform and an inverse tr
 Next, implement the function `pca_inverse_transform`, which reconstructs the data using the top $n_comp$ principal components following these steps: 
 
 10. Select the first $n_comp$ components from the given eigenvectors. 
-11. Project the centered data onto the space defined by the selected eigenvectors by multiplying both matrices, giving us the reduced data.
-12. Reconstruct the data projecting it back to the original space by multiplying the reduced data with the transposed selected eigenvectors. Don't forget to add the mean vector afterwards.
+11. Project the centered data onto the space defined by the selected eigenvectors by multiplying the transposed selected eigenvectors and the centered data matrix, giving us the reduced data.
+12. Reconstruct the data projecting it back to the original space by multiplying the selected eigenvectors with the reduced data. Don't forget to add the mean vector afterwards.
 13. Return the reconstructed data.
 
 Now, before returning to the `__main__` function, we also want to calculate the explained variance associated with our principal components. For that, implement the `expl_var` function following these steps:
