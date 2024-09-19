@@ -4,7 +4,7 @@ In this exercise, we will take a closer look at the mechanics of Principal Compo
 
 ### Task 1: Principal Component Analysis
 
-In this task, we will implement all the necessary steps to perform a PCA and visualize how much of the original information content of an image remains after the image features are projected into a lower dimensional space. To achieve this, we will treat each row of the input image as an individual data sample, with the features represented by the RGB values in each column. We then apply PCA to these samples to obtain the principal components, project each sample onto the first _k_ principal components, and then back into the original space. The example image we use has _531 rows x 800 columns x 3 color values_, resulting in 531 samples with 2400 features each.  
+In this task, we will implement all the necessary steps to perform a PCA and visualize how much of the original information content of an image remains after the image features are projected into a lower dimensional space. 
 
 Navigate to `src/ex1_pca.py` and have a look at the `__main__` function :
 
@@ -13,13 +13,13 @@ Navigate to `src/ex1_pca.py` and have a look at the `__main__` function :
 
 > Note: You can also use ``plt.imshow()`` followed by ``plt.savefig(your_path)`` as a simple way to save the image. Do not forget to ``plt.close()`` your plot afterwards, because we will export a fair amount of images in this exercise.
 
-3. Reshape the image array into a 2D-array of shape $(n,m)$, where $n$ = `num_rows` and $m$ = `num_columns * num_channels`, such that each row of this new array represents all pixel values of the corresponding image row.
+3. Reshape the image array into a 2D-array of shape $(d,n)$, where $d$ = `num_rows` is the number of features and $n$ = `num_columns * num_channels` would represent our examples.
 
 Now we will implement the functions to perform a PCA transform and an inverse transform on our 2D array. First implement the function `pca_transform`: 
 
-4. Compute the mean vector over the features of the input matrix. The resulting mean vector should have the size $(1,m)$.
+4. Compute the mean vector over the features of the input matrix. The resulting mean vector should have the size $(d,1)$.
 5. Center the data by subtracting the mean from the 2D image array.
-6. Compute the covariance matrix of the centered data. (Hint: `numpy.cov`, set `rowvar=False` in order to compute the covariances on features.)
+6. Compute the covariance matrix of the centered data. (Hint: `numpy.cov`.)
 7. Perform the eigendecomposition of the covariance matrix. (Hint: `numpy.linalg.eigh`)
 8. Sort eigenvalues in descending order and eigenvectors by their descending eigenvalues.
 9. Return sorted eigenvalues, eigenvectors, centered data and the mean vector.
@@ -42,12 +42,15 @@ Go back to the `__main__` function and implement the following TODOs:
 17. Loop through a range of all possible values of the number of components. It is sufficient to use the step size of 10 to speed up the process. To monitor the progress of the loop, you can create a progress bar using [the very handy Python package tqdm](https://github.com/tqdm/tqdm).
 
 	17.1. Perform PCA using the previously implemented `pca_transform` function.
+
 	17.2. Apply  the `pca_inverse_transform` function to project the image to lower-dimensional space using the current number of components and reconstruct the image from this reduced representation.
+
 	17.3. Bring the resulting array back into the original image shape and save it in the ``output`` folder as an image called ``pca_k.png``, where _k_ is replaced with the number of components used to create the image.
 
 	> Note: You should again cast the image back to the uint8 dtype.
    
 	17.4. Compute the cumulative explained variance ratio for the current number of components using the `expl_var` function and store it in a list for later plotting.
+
 	17.5. We would also like to quantify how closely our created image resembles the original one. Use ``skimage.metrics.structural_similarity`` to compute a perceptual similarity score (SSIM) between the original and the reconstructed image and also store it in another list for later plotting. As we deal with RGB images, you have to pass `channel_axis=2` to the SSIM function.
    
 18. Plot the cumulative explained variances of each principal component against the number of components. 
@@ -61,7 +64,7 @@ We have seen that a significantly reduced feature dimensionality is often suffic
 
 We start in the the `__main__` function.
 
-1. Load the dataset from ``sklearn.datasets.fetch_lfw_people`` in the same way as for Task 2 of Day 06 and get access to the data.
+1. Load the dataset from ``sklearn.datasets.fetch_lfw_people`` in the same way as for Task 2 of Day 05 and get access to the data.
 2. Split the data 80:20 into training and test data. Use `random_state=42` in the split function. 
 3. Use the `StandardScaler` from `sklearn.preprocessing` on the train set and scale both the train and the test set.
 
@@ -80,7 +83,7 @@ Implement the `pca_train` function to train a model on preprocessed data:
 10. Call the `train_fun` function, which is passed as an argument, to train a model on the transformed PCA features.
 11. The function should return a tuple containing two elements: the PCA decomposition object and the trained model.
 
-12. Import or paste your cv_svm function from Task 2 of Day 06 above the code. Utilize it together with the computed number of required components to call `pca_train` in the `__main__` function.  This will allow us to train the model with the reduced feature set. Use the `time` function from the `time` module to measure and print the duration of this process for evaluation. 
+12. Import or paste your cv_svm function from Task 2 of Day 05 above the code. Utilize it together with the computed number of required components to call `pca_train` in the `__main__` function.  This will allow us to train the model with the reduced feature set. Use the `time` function from the `time` module to measure and print the duration of this process for evaluation. 
 	
 13. To evaluate the model on the test set, we need to perform the same transform on the test data, as we did on the training data. Use the `PCA.transform` of your PCA decomposition object to do this.
 14. Now we can compute and print the accuracy of our trained model on the test set.
@@ -106,13 +109,19 @@ Implement the `gs_pca` function, which utilizes a grid search approach to determ
 21. Next, initialize the variables to keep track of the best mean accuracy score and the corresponding number of PCA components found 22. Iterate through the specified list of PCA component values.
 
 	22.1. Create an outer 5-fold cross-validation loop, iterating through the 5 splits while obtaining the training and testing indices for each split.
+	
 		22.1.1. Generate the current training and testing sets from the given data based on these indices.
+		
 		22.1.2. Scale the generated data fitting the `StandardScaler` on the training set and scale the training and test sets.
+		
 		22.1.3. Instantiate a PCA object with the same parameters as before and transform the training data.
+		
 		22.1.4. Now is the time to call our function `cv_svm` and perform the inner cross-validation to tune hyperparameters. In order to save you the time, we have determined that the following parameters consistently yield the best results: C=10 and kernel='rbf'. Therefore, you can skip the inner cross-validation step and proceed to create and train your classifier with these predefined parameters.
+		
 		22.1.5. Predict the labels on the test data and compute the accuracy score for each fold. 
 		
 	22.2. Calculate the mean accuracy score across the folds.
+	
 	22.3. If the mean accuracy score for the current number of PCA components is higher than the best score seen so far, update the  best score and the best number components.
 23. The function should return the number of PCA components that yielded the highest mean accuracy score during the grid search. This represents the optimal number of components for feature dimensionality reduction.
 

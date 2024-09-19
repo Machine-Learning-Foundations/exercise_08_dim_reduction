@@ -12,19 +12,19 @@ np.random.seed(0)
 
 
 def pca_transform(
-    img_rows: np.ndarray,
+    img_cols: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Perform a PCA transformation on the input matrix.
 
     Args:
-        img_rows (np.ndarray): Rows of flattened image data (size n x m).
+        img_cols (np.ndarray): Rows of flattened image data (size d x n).
 
     Returns:
         tuple: Instances of the Principal Component Analysis:
-        np.ndarray (m x 1): The eigenvalues sorted in descending order.
-        np.ndarray (m x m): The eigenvectors sorted according to the order of the eigenvalues.
-        np.ndarray (n x m): The zero-meaned data matrix.
-        np.ndarray (1 x m): The vector of the feature means of the input matrix.
+        np.ndarray (d x 1): The eigenvalues sorted in descending order.
+        np.ndarray (d x d): The eigenvectors sorted according to the order of the eigenvalues.
+        np.ndarray (d x n): The zero-meaned data matrix.
+        np.ndarray (d x 1): The vector of the feature means of the input matrix.
     """
     # 4. compute mean for each feature
     # TODO
