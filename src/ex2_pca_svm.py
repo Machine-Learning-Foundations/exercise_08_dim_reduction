@@ -11,8 +11,11 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 
+
 # import or paste here your function cv_svm
 # TODO
+def cv_svm():
+    pass
 
 
 def explained_var(xtrain: np.ndarray) -> np.ndarray:

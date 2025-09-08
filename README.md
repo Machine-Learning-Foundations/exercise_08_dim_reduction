@@ -24,9 +24,9 @@ Now we will implement the functions to perform a PCA transform and an inverse tr
 8. Sort eigenvalues in descending order and eigenvectors by their descending eigenvalues.
 9. Return sorted eigenvalues, eigenvectors, centered data and the mean vector.
 
-Next, implement the function `pca_inverse_transform`, which reconstructs the data using the top $n_comp$ principal components following these steps: 
+Next, implement the function `pca_inverse_transform`, which reconstructs the data using the top $n_{comp}$ principal components following these steps: 
 
-10. Select the first $n_comp$ components from the given eigenvectors. 
+10. Select the first $n_{comp}$ components from the given eigenvectors. 
 11. Project the centered data onto the space defined by the selected eigenvectors by multiplying the transposed selected eigenvectors and the centered data matrix, giving us the reduced data.
 12. Reconstruct the data projecting it back to the original space by multiplying the selected eigenvectors with the reduced data. Don't forget to add the mean vector afterwards.
 13. Return the reconstructed data.
@@ -34,7 +34,7 @@ Next, implement the function `pca_inverse_transform`, which reconstructs the dat
 Now, before returning to the `__main__` function, we also want to calculate the explained variance associated with our principal components. For that, implement the `expl_var` function following these steps:
 
 14. Calculate the total variance by summing up all the eigenvalues.
-15. Compute the cumulative explained variance by summing the first 'n_comp' eigenvalues.
+15. Compute the cumulative explained variance by summing the first $n_{comp}$ eigenvalues.
 16. Determine the cumulative explained variance ratio by dividing the cumulative explained variance by the total variance. Return the result.
 
 Go back to the `__main__` function and implement the following TODOs:
