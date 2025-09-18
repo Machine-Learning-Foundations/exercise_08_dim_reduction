@@ -105,7 +105,7 @@ We have seen how PCA can improve both the runtime and the results of our trainin
 
 Implement the `gs_pca` function, which utilizes a grid search approach to determine the most suitable number of PCA components for feature dimensionality reduction before the training:
 
-20. Define the outer k-fold cross-validation strategy with 5 folds using `KFold` from `sklearn.model_selection`.
+20. Define the outer k-fold cross-validation strategy with 5 folds using `KFold` from `sklearn.model_selection`. Set `random_state = 42`.
 21. Next, initialize the variables to keep track of the best mean accuracy score and the corresponding number of PCA components found 22. Iterate through the specified list of PCA component values.
 
 	22.1. Create an outer 5-fold cross-validation loop, iterating through the 5 splits while obtaining the training and testing indices for each split.
