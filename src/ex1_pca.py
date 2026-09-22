@@ -8,6 +8,8 @@ from skimage.io import imsave
 from skimage.metrics import structural_similarity
 from tqdm import tqdm
 
+from util_pca import plot_expl_var_ssim, save_image, to_uint8
+
 np.random.seed(0)
 
 
@@ -17,20 +19,22 @@ def pca_transform(
     """Perform a PCA transformation on the input matrix.
 
     Args:
-        img_cols (np.ndarray): Rows of flattened image data (size d x n).
+        img_rows (np.ndarray): Rows of flattened image data (size d x n),
+            i.e. d features (rows) and n examples (columns).
 
     Returns:
         tuple: Instances of the Principal Component Analysis:
-        np.ndarray (d x 1): The eigenvalues sorted in descending order.
-        np.ndarray (d x d): The eigenvectors sorted according to the order of the eigenvalues.
+        np.ndarray (d,): The eigenvalues sorted in descending order.
+        np.ndarray (d x d): The eigenvectors (as columns) sorted according to the
+            order of the eigenvalues.
         np.ndarray (d x n): The zero-meaned data matrix.
         np.ndarray (d x 1): The vector of the feature means of the input matrix.
     """
-    # 4. compute mean for each feature
+    # 4. compute mean for each feature (i.e. over all examples = columns)
     # TODO
     # 5. center input data by subtracting mean
     # TODO
-    # 6. calculate covariance matrix
+    # 6. calculate covariance matrix (rows are the variables)
     # TODO
     # 7. perform eigendecomposition of covariance matrix
     # TODO
@@ -46,13 +50,13 @@ def pca_inverse_transform(
     """Perform PCA inverse transformation to reconstruct compressed data.
 
     Args:
-        data_centered (np.ndarray): Data with zero mean.
-        eigenvec (np.ndarray): The eigenvectors sorted according to the order of the PCA eigenvalues.
-        mean_v (np.ndarray): The vector of the feature means.
+        data_centered (np.ndarray): Data with zero mean (d x n).
+        eigenvec (np.ndarray): The eigenvectors sorted according to the order of the PCA eigenvalues (d x d).
+        mean_v (np.ndarray): The vector of the feature means (d x 1).
         n_comp (int): The number of components for the reconstruction.
 
     Returns:
-        np.ndarray: The reconstructed data.
+        np.ndarray: The reconstructed data (d x n).
     """
     # 10. select top 'n_comp' eigenvectors
     # TODO
@@ -60,7 +64,7 @@ def pca_inverse_transform(
     # 11. project centered data onto space defined by selected eigenvectors
     # TODO
 
-    # 12. reconstruct reduced data
+    # 12. reconstruct data and add mean vector
     # TODO
     # 13. return reconstructed data
     return None  # TODO
@@ -89,22 +93,24 @@ if __name__ == "__main__":
     # 1. create empty output dir
     # TODO
 
-    # 2. load image, plot it and save as .png file
+    # 2. load image, plot it and save as .png file (given: 'save_image')
     # TODO
 
     # 3. reshape image in 2D-array of shape (num_rows, num_columns * num_channels)
     # TODO
 
+    # 17.1. perform PCA using 'pca_transform' function
+    # (only once: the decomposition does not depend on the number of components)
+    # TODO
+
     # 17. iterate through range of n_components values (possibly incrementing by 10)
     # TODO
 
-    # 17.1. perform PCA using 'pca_transform' function
-    # TODO
     # 17.2. reconstruct image from  lower-dimensional representation
     # using current number of components using 'pca_inverse_transform'
     # TODO
-    # 17.3. reshape recovered image to its original shape
-    # and save it in output folder
+    # 17.3. reshape recovered image to its original shape, convert it to
+    # uint8 and save it (given: 'to_uint8' and 'save_image')
     # TODO
 
     # 17.4. compute and store cumulative explained variance ratio
@@ -114,10 +120,7 @@ if __name__ == "__main__":
     # 17.5 compute and store SSIM
     # TODO
 
-    # 18. plot cumulative explained variance ratios...
-    # create list of x-axis tick locations (every 10th component)
-    # TODO
-
-    # 19. ...and SSIM
+    # 18./19. plot the cumulative explained variance ratios and the SSIM
+    # against the number of components (given: 'plot_expl_var_ssim')
     # TODO
     pass
