@@ -1,16 +1,18 @@
 """Test pca svm methods."""
+
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import load_iris, make_classification
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
 sys.path.insert(0, "./src/")
-from src.ex2_pca_svm import cv_svm, explained_var, gs_pca, pca_train
+from src.ex2_pca_svm import cv_svm, explained_var, nested_cv, pca_train, select_n_comp
 
 
-# auxilary function for testing gs_pca funciton
+# auxiliary function for testing the pca_train function
 def train_knn(xtrain, ytrain):
     """Train k-NN with k = 3."""
     knn = KNeighborsClassifier(n_neighbors=3)
@@ -25,102 +27,112 @@ y = iris.target
 
 
 def test_cv_svm():
-    """Test the cross-validated soft margin SVM classifier."""
-    # create dummy dataset
+    """Test the cross-validated soft margin SVM classifier.
+
+    Note: the expected values assume the parameter grid from Day 06
+    (C in 10^-2, ..., 10^3 and kernel in {'rbf', 'linear', 'poly'}).
+    """
     x_t, y_t = make_classification(
         n_samples=100, n_features=20, n_classes=2, random_state=42
     )
-    # reshape data to fit into SVM
-    x_t = x_t.reshape(-1, 20)
-    # call function that is to be tested
     clf = cv_svm(x_t, y_t)
 
-    # check if returned object is of expected type
+    # check if returned object is a fitted grid search
     assert isinstance(clf, GridSearchCV)
-
-    # get best score
-    best_score = clf.best_score_
-    # get best parameters
-    best_param_c = clf.best_params_["C"]
-
-    # perform assertions on best results
-    assert clf is not None
     assert hasattr(clf, "best_params_")
     assert hasattr(clf, "predict")
-    assert np.allclose(best_score, 0.99)
-    assert np.allclose(best_param_c, 1)
+
+    # check best results
+    assert np.isclose(clf.best_score_, 0.99)
+    assert clf.best_params_["C"] == 1
 
 
 def test_explained_var():
-    """Test the explained variance array generation."""
-    # create synthetic data
-    num_samples = 100
-    num_features = 10
+    """Test the cumulative explained variance array."""
     np.random.seed(0)
+    num_samples, num_features = 100, 10
     synthetic_data = np.random.rand(num_samples, num_features)
 
-    # calculate PCA explained variance
     cumulative_explained_var = explained_var(synthetic_data)
+    plt.close("all")
 
-    # check if result is NumPy array
     assert isinstance(cumulative_explained_var, np.ndarray)
-
-    # check if length of cumulative_explained_var matches number of features
-    assert cumulative_explained_var.shape[0] == num_features
-
-    # check if cumulative explained variance is between 0 and 1
-    eps = np.finfo(cumulative_explained_var.dtype).resolution
-    assert all(
-        0 - eps <= explained_var <= 1 + eps
-        for explained_var in cumulative_explained_var
-    )
-
-    # check if cumulative explained variance is non-decreasing
-    assert all(
-        cumulative_explained_var[i] <= cumulative_explained_var[i + 1]
-        for i in range(num_features - 1)
-    )
-
-    # check if first element is approx. equal
-    assert np.allclose(cumulative_explained_var[0], 0.16132983)
+    assert cumulative_explained_var.shape == (num_features,)
+    # cumulative values are non-decreasing and end at 1
+    assert np.all(np.diff(cumulative_explained_var) >= -1e-12)
+    assert np.isclose(cumulative_explained_var[-1], 1.0)
+    # check first element
+    assert np.isclose(cumulative_explained_var[0], 0.16132983)
 
 
 def test_pca_train():
-    """Test the explained variance array generation."""
-    # split dataset into training and test sets
+    """Test training a model on PCA-transformed features."""
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=0.25, random_state=29
     )
-
-    # choose the number of components for PCA
     n_components = 2
 
-    # call pca_train function with KNN as the classifier
     pca, model_pca = pca_train(x_train, y_train, n_components, train_knn)
 
-    # check if pca and model_pca are not None
-    assert pca is not None
-    assert model_pca is not None
-
-    # Check if model_pca has necessary attributes
-    assert hasattr(model_pca, "n_neighbors")
-
-    # check if PCA has been fit
+    # check the fitted PCA
     assert hasattr(pca, "components_")
+    assert pca.n_components_ == n_components
+    assert pca.whiten
+    # check that train_fun was used to train the model
+    assert isinstance(model_pca, KNeighborsClassifier)
+    assert model_pca.n_features_in_ == n_components
 
     # test model on test set
-    x_test_pca = pca.transform(x_test)
-    y_pred = model_pca.predict(x_test_pca)
-
-    # calculate accuracy of the model
+    y_pred = model_pca.predict(pca.transform(x_test))
     accuracy = np.mean(y_pred == y_test)
-
-    # check if accuracy is reasonable
-    assert np.allclose(accuracy, 0.9210526)
+    assert np.isclose(accuracy, 0.9210526)
 
 
-def test_gs_pca():
-    """Test the cross-validation on the number of principal components."""
+def test_select_n_comp():
+    """Test the cross-validated selection of the number of principal components.
+
+    Note: the expected value assumes
+    StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    and a fixed SVC(C=10, kernel="rbf").
+    """
     numbers = np.arange(1, 5, 1)
-    best_num_comp = gs_pca(x, y, numbers)
-    assert best_num_comp == 3
+    best_num_comp = select_n_comp(x, y, numbers)
+    assert best_num_comp in numbers
+    assert best_num_comp == 4
+
+
+def test_nested_cv():
+    """Test the nested cross-validation."""
+    numbers = np.arange(1, 5, 1)
+    mean_acc, std_acc, chosen_comps = nested_cv(x, y, numbers)
+
+    # one selected number of components per outer fold
+    assert len(chosen_comps) == 5
+    assert all(n in numbers for n in chosen_comps)
+    # the estimate itself
+    assert np.isclose(mean_acc, 0.94)
+    assert np.isclose(std_acc, 0.04422166, atol=1e-6)
+
+
+def test_nested_cv_uses_outer_training_data_only(monkeypatch):
+    """Test that the components are selected without the outer test fold.
+
+    'select_n_comp' must be called on the outer training part only (4/5 of the
+    data), otherwise the selection leaks information from the outer test fold.
+    """
+    import src.ex2_pca_svm as ex2
+
+    sizes = []
+    original = ex2.select_n_comp
+
+    def spy(xtrain, ytrain, comps):
+        sizes.append(len(xtrain))
+        return original(xtrain, ytrain, comps)
+
+    monkeypatch.setattr(ex2, "select_n_comp", spy)
+    ex2.nested_cv(x, y, np.arange(1, 5, 1))
+
+    assert len(sizes) == 5, "select_n_comp should be called once per outer fold."
+    assert all(size == 120 for size in sizes), (
+        "select_n_comp must only see the outer training part (120 of 150 samples)."
+    )
